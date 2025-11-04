@@ -92,15 +92,30 @@ def find_face(image_path: str):
         print(f"Searching for face...")
 
         try:
-            results = DeepFace.find(img_path=local_path, db_path=DB_PATH)
+            results = DeepFace.find(img_path=local_path, db_path=DB_PATH, enforce_detection=False)
 
             if len(results) > 0 and len(results[0]) > 0:
-                print(f"\nFound {len(results[0])} match(es):")
-                for idx, row in results[0].iterrows():
+                df = results[0]
+                print(f"\nFound {len(df)} match(es)")
+                print("(Lower distance = better match. < 0.4 is strong match, 0.4-0.6 possible match, > 0.6 weak match)\n")
+
+                # Show top 10 matches
+                top_matches = df.head(10)
+                print("Top matches:")
+                for idx, row in top_matches.iterrows():
                     identity = row['identity']
                     distance = row['distance']
                     person_name = Path(identity).parent.name
-                    print(f"  - {person_name} (distance: {distance:.4f})")
+
+                    # Add confidence indicator
+                    if distance < 0.4:
+                        confidence = "★★★"
+                    elif distance < 0.6:
+                        confidence = "★★"
+                    else:
+                        confidence = "★"
+
+                    print(f"  {confidence} {person_name} (distance: {distance:.4f})")
             else:
                 print("No matches found in database.")
         except Exception as e:
